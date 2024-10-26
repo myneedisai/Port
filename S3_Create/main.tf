@@ -4,10 +4,14 @@ provider "aws" {
 
 resource "aws_s3_bucket" "my_bucket" {
   bucket = var.s3_bucket_name
-  acl    = var.s3_acl
 
   tags = {
     Name        = var.s3_bucket_name
     Environment = "Dev" # Adjust as needed
   }
+}
+
+resource "aws_s3_bucket_acl" "my_bucket_acl" {
+  bucket = aws_s3_bucket.my_bucket.id
+  acl    = var.s3_acl
 }
