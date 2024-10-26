@@ -12,5 +12,5 @@ resource "aws_s3_bucket" "my_bucket" {
 }
 
 resource "aws_s3_bucket_acl" "my_bucket_acl" {
-  bucket = var.aws_s3_bucket.my_bucket.id
+  bucket = var.s3_acl
 }
