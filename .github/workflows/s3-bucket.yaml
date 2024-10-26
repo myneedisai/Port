@@ -3,15 +3,15 @@ name: Provision S3 Bucket
 on:
   workflow_dispatch:
     inputs:
-      s3_bucket_name:
+      bucket_name:
         description: "S3 Bucket Name"
         required: true
         type: string
-      s3_region:
+      region:
         description: "AWS Region"
         required: true
         type: string
-      s3_acl:
+      acl:
         description: "S3 ACL (e.g., private, public-read)"
         required: true
         type: string
