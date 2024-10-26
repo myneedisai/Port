@@ -7,10 +7,6 @@ on:
         description: "S3 Bucket Name"
         required: true
         type: string
-      region:
-        description: "AWS Region"
-        required: true
-        type: string
       acl:
         description: "S3 ACL (e.g., private, public-read)"
         required: true
