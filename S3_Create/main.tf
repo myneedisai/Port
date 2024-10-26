@@ -13,5 +13,5 @@ resource "aws_s3_bucket" "my_bucket" {
 
 resource "aws_s3_bucket_acl" "my_bucket_acl" {
   bucket = aws_s3_bucket.my_bucket.id
-  acl    = var.s3_acl
+  acl    = "private"
 }
