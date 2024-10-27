@@ -16,7 +16,7 @@ variable "ec2_instance_type" {
   default     = "t2.micro"  # Change as necessary
 }
 
-variable "key_name" {
+variable "pem_key_name" {
   description = "The key name to use for the EC2 instance"
   type        = string
 }
