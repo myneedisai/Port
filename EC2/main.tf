@@ -28,7 +28,7 @@ resource "aws_instance" "nginx_instance" {
 }
 
 resource "aws_security_group" "nginx_sg1" {
-  name        = "nginx_security_group"
+  name        = "nginx_security_group1"
   description = "Allow HTTP traffic"
 
   ingress {
