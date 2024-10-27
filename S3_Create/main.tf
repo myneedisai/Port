@@ -9,9 +9,27 @@ resource "aws_s3_bucket" "my_bucket" {
     Name        = var.s3_bucket_name
     Environment = "Dev" # Adjust as needed
   }
+
+  block_public_acls  = true
+  ignore_public_acls  = true
+  block_public_policy = true
+  restrict_public_buckets = true
 }
 
-resource "aws_s3_bucket_acl" "my_bucket_acl" {
+
+# Optionally define a bucket policy if you need specific access controls
+resource "aws_s3_bucket_policy" "my_bucket_policy" {
   bucket = aws_s3_bucket.my_bucket.id
-  acl    = var.s3_acl
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = "${aws_s3_bucket.my_bucket.arn}/*"
+      },
+    ]
+  })
 }
+
