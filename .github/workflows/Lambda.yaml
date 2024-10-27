@@ -1,0 +1,134 @@
+name: Provision AWS Lambda Function
+
+on:
+  workflow_dispatch:
+    inputs:
+      lambda_name:
+        description: Lambda function name
+        required: true
+        type: string
+      lambda_runtime:
+        description: Lambda runtime (e.g., nodejs14.x, python3.8)
+        required: true
+        type: string
+      lambda_handler:
+        description: Lambda handler (e.g., index.handler)
+        required: true
+        type: string
+      port_context:
+        required: true
+        description: includes blueprint, runId.
+        type: string
+      s3_bucket:
+        description: S3 bucket for Lambda code
+        required: true
+        type: string
+      s3_key:
+        description: S3 key for Lambda code
+        required: true
+        type: string
+
+jobs:
+  provision-lambda:
+    runs-on: ubuntu-latest
+    steps:
+    
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Log starting of Lambda function creation 
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{ fromJson(inputs.port_context).run_id }}
+          logMessage: |
+              About to create Lambda function ${{ github.event.inputs.lambda_name }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: '${{ secrets.TF_USER_AWS_KEY }}'
+          aws-secret-access-key: '${{ secrets.TF_USER_AWS_SECRET }}'
+          aws-region: '${{ secrets.TF_USER_AWS_REGION }}'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+          
+      - name: Terraform Apply
+        id: apply
+        env:
+          TF_VAR_lambda_name: "${{ github.event.inputs.lambda_name }}"
+          TF_VAR_lambda_runtime: "${{ github.event.inputs.lambda_runtime }}"
+          TF_VAR_lambda_handler: "${{ github.event.inputs.lambda_handler }}"
+          TF_VAR_s3_bucket: "${{ github.event.inputs.s3_bucket }}"
+          TF_VAR_s3_key: "${{ github.event.inputs.s3_key }}"
+          TF_VAR_aws_region: "${{ secrets.TF_USER_AWS_REGION }}"
+        run: |
+          cd Lambda
+          terraform init
+          terraform validate
+          terraform plan 
+          terraform apply -auto-approve
+
+      - name: Set Outputs
+        id: set_outputs
+        run: |
+          cd Lambda
+          echo "lambda_arn=$(terraform output -raw lambda_arn)" >> $GITHUB_ENV
+          echo "lambda_name=$(terraform output -raw lambda_name)" >> $GITHUB_ENV
+          echo "lambda_runtime=$(terraform output -raw lambda_runtime)" >> $GITHUB_ENV
+          echo "lambda_handler=$(terraform output -raw lambda_handler)" >> $GITHUB_ENV
+          
+      - name: Create a log message
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{ fromJson(inputs.port_context).run_id }}
+          logMessage: |
+              Lambda function created successfully
+
+      - name: Report Created Lambda Function to Port
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{ fromJson(inputs.port_context).run_id }}
+          logMessage: "Upserting created Lambda function to Port"
+          
+      - name: UPSERT Lambda Function Entity
+        uses: port-labs/port-github-action@v1
+        with:
+          identifier: "${{ steps.set_outputs.outputs.lambda_arn }}"
+          title: "${{ inputs.lambda_name }}"
+          blueprint: ${{ fromJson(inputs.port_context).blueprint }}
+          properties: |-
+            {
+              "lambda_name": "${{ env.lambda_name }}",
+              "lambda_runtime": "${{ env.lambda_runtime }}",
+              "lambda_handler": "${{ env.lambda_handler }}"
+            }
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: UPSERT
+          runId: ${{ fromJson(inputs.port_context).run_id }}
+
+      - name: Log After Upserting Entity
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{ fromJson(inputs.port_context).run_id }}
+          logMessage: "Entity upserting was successful"
