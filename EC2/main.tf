@@ -45,7 +45,3 @@ resource "aws_security_group" "nginx_sg" {
   }
 }
 
-output "instance_public_ip" {
-  description = "The public IP of the EC2 instance"
-  value       = aws_instance.nginx_instance.public_ip
-}
