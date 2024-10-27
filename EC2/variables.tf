@@ -4,6 +4,10 @@ variable "aws_region" {
   default     = "us-west-1"  # Change as necessary
 }
 
+variable "ec2_name" {
+  type = string
+}
+
 variable "ami_id" {
   description = "The AMI ID to use for the EC2 instance"
   type        = string
