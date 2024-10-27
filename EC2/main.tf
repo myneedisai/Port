@@ -4,10 +4,10 @@ provider "aws" {
 
 resource "aws_instance" "nginx_instance" {
   ami           = var.ami_id          # Update with your desired AMI ID
-  instance_type = var.instance_type
+  instance_type = var.ec2_instance_type
 
   # Specify your key pair name
-  key_name      = var.key_name
+  key_name      = var.pem_key_name
 
   # Add security group for HTTP access
   vpc_security_group_ids = [aws_security_group.nginx_sg.id]
