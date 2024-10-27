@@ -10,13 +10,14 @@ resource "aws_instance" "nginx_instance" {
   key_name      = var.pem_key_name
 
   # Add security group for HTTP access
-  vpc_security_group_ids = [aws_security_group.nginx_sg.id]
+  vpc_security_group_ids = [aws_security_group.nginx_sg1.id]
 
   # User data to install Nginx and serve a Hello World page
   user_data = <<-EOF
               #!/bin/bash
-              echo "<h1>Hello World</h1>" > /var/www/html/index.html
-              yum install -y nginx
+              apt-get update
+              apt-get install -y nginx
+              echo "<h1>Hello World</h1>" > /var/www/html/index.nginx-debian.html
               systemctl start nginx
               systemctl enable nginx
               EOF
@@ -26,7 +27,7 @@ resource "aws_instance" "nginx_instance" {
   }
 }
 
-resource "aws_security_group" "nginx_sg" {
+resource "aws_security_group" "nginx_sg1" {
   name        = "nginx_security_group"
   description = "Allow HTTP traffic"
 
