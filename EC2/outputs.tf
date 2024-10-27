@@ -1,6 +1,6 @@
 output "instance_id" {
   description = "The unique identifier for the provisioned EC2 instance."
-  value       = aws_instance.app_server.id
+  value       = aws_instance.var.ec2_name.id
 }
 
 output "instance_state" {
