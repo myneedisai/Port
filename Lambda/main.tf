@@ -54,7 +54,7 @@ data "archive_file" "zip_the_Python_code" {
 }
 
 resource "aws_lambda_function" "terraform_lambda_func" {
-  filename      = data.archive_file.zip_the_lambda_code.output_path
+  filename      = data.archive_file.zip_the_Python_code.output_path
   function_name = var.lambda_name
   role          = aws_iam_role.lambda_role.arn
   handler       = var.lambda_handler
