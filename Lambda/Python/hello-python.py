@@ -1,6 +1,5 @@
 def lambda_handler(event, context):
-    # Your code here
-    return {
-        'statusCode': 200,
-        'body': 'Hello, World!'
-    }
+   message = 'Hello {} !'.format(event['key1'])
+   return {
+       'message' : message
+   }
