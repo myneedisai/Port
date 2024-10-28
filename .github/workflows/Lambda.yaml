@@ -63,7 +63,7 @@ jobs:
           TF_VAR_lambda_runtime: "${{ github.event.inputs.lambda_runtime }}"
           TF_VAR_aws_region: "${{ secrets.TF_USER_AWS_REGION }}"
         run: |
-          cd lambda 
+          cd Lambda 
           terraform init
           terraform validate
           terraform plan 
@@ -72,7 +72,7 @@ jobs:
       - name: Set Outputs
         id: set_outputs
         run: |
-          cd lambda
+          cd Lambda
           echo "lambda_function_name=$(terraform output -raw lambda_function_name)" >> $GITHUB_ENV
           echo "lambda_function_arn=$(terraform output -raw lambda_function_arn)" >> $GITHUB_ENV
 
