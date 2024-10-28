@@ -47,10 +47,10 @@ resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
   policy_arn = aws_iam_policy.iam_policy_for_lambda.arn
 }
 
-data "archive_file" "zip_the_lambda_code" {
+data "archive_file" "zip_the_Python_code" {
   type        = "zip"
-  source_dir  = "${path.module}/lambda_code/"
-  output_path = "${path.module}/lambda_code/${var.lambda_name}.zip"
+  source_dir  = "${path.module}/Lambda/Python/"
+  output_path = "${path.module}/Lambda/Python/hello-python.zip"
 }
 
 resource "aws_lambda_function" "terraform_lambda_func" {
