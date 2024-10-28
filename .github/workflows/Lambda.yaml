@@ -3,35 +3,35 @@ name: Provision AWS Lambda Function
 on:
   workflow_dispatch:
     inputs:
-      lambda_function_name:
-        description: "Lambda Function Name"
-        required: true
-        type: string
-      lambda_runtime:
-        description: "Lambda Runtime (e.g., nodejs14.x, python3.8)"
+      lambda_name:
+        description: Lambda function name
         required: true
         type: string
       lambda_handler:
-        description: "Lambda Handler (e.g., index.handler)"
+        description: Lambda handler (e.g., file_name.function_name)
         required: true
         type: string
-      lambda_role_arn:
-        description: "IAM Role ARN for Lambda"
+      lambda_runtime:
+        description: Lambda runtime (e.g., python3.8)
         required: true
         type: string
       port_context:
         required: true
-        description: "Includes blueprint, runId."
+        description: Includes blueprint, runId.
         type: string
 
 jobs:
   provision-lambda:
     runs-on: ubuntu-latest
-
     steps:
+    
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+    
       - name: Log starting of Lambda Function creation
         uses: port-labs/port-github-action@v1
         with:
@@ -40,14 +40,15 @@ jobs:
           baseUrl: https://api.getport.io
           operation: PATCH_RUN
           runId: ${{ fromJson(inputs.port_context).run_id }}
-          logMessage: "About to create Lambda function ${{ github.event.inputs.lambda_function_name }}"
+          logMessage: |
+              About to create Lambda function ${{ github.event.inputs.lambda_name }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: '${{ secrets.TF_USER_AWS_KEY }}'
           aws-secret-access-key: '${{ secrets.TF_USER_AWS_SECRET }}'
-          aws-region: '${{ secrets.TF_USER_AWS_REGION }}'
+          aws-region: '${{ github.event.inputs.lambda_region }}'  # Modify if you have a region input
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -57,25 +58,23 @@ jobs:
       - name: Terraform Apply
         id: apply
         env:
-          TF_VAR_lambda_function_name: "${{ github.event.inputs.lambda_function_name }}"
-          TF_VAR_lambda_runtime: "${{ github.event.inputs.lambda_runtime }}"
+          TF_VAR_lambda_name: "${{ github.event.inputs.lambda_name }}"
           TF_VAR_lambda_handler: "${{ github.event.inputs.lambda_handler }}"
-          TF_VAR_lambda_role_arn: "${{ github.event.inputs.lambda_role_arn }}"
+          TF_VAR_lambda_runtime: "${{ github.event.inputs.lambda_runtime }}"
           TF_VAR_aws_region: "${{ secrets.TF_USER_AWS_REGION }}"
         run: |
-          cd Lambda_Create
+          cd lambda  # Adjust if your Terraform files are in a different directory
           terraform init
           terraform validate
-          terraform plan
+          terraform plan 
           terraform apply -auto-approve
 
       - name: Set Outputs
         id: set_outputs
         run: |
-          cd Lambda_Create
+          cd lambda
           echo "lambda_function_name=$(terraform output -raw lambda_function_name)" >> $GITHUB_ENV
           echo "lambda_function_arn=$(terraform output -raw lambda_function_arn)" >> $GITHUB_ENV
-          echo "lambda_function_version=$(terraform output -raw lambda_function_version)" >> $GITHUB_ENV
 
       - name: Create a log message
         uses: port-labs/port-github-action@v1
@@ -85,9 +84,10 @@ jobs:
           baseUrl: https://api.getport.io
           operation: PATCH_RUN
           runId: ${{ fromJson(inputs.port_context).run_id }}
-          logMessage: "Lambda Function created successfully"
+          logMessage: |
+              Lambda function ${{ env.lambda_function_name }} created successfully
 
-      - name: Report Created Lambda Function to Port
+      - name: Report Created Lambda to Port
         uses: port-labs/port-github-action@v1
         with:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
@@ -95,19 +95,18 @@ jobs:
           baseUrl: https://api.getport.io
           operation: PATCH_RUN
           runId: ${{ fromJson(inputs.port_context).run_id }}
-          logMessage: "Upserting created Lambda Function to Port"
-
+          logMessage: "Upserting created Lambda function to Port"
+          
       - name: UPSERT Lambda Function Entity
         uses: port-labs/port-github-action@v1
         with:
-          identifier: "${{ steps.set_outputs.outputs.lambda_function_name }}"
-          title: "${{ github.event.inputs.lambda_function_name }}"
+          identifier: "${{ steps.set_outputs.outputs.lambda_function_arn }}"
+          title: "${{ inputs.lambda_name }}"
           blueprint: ${{ fromJson(inputs.port_context).blueprint }}
           properties: |-
             {
-              "lambda_function_name": "${{ env.lambda_function_name }}",
-              "lambda_function_arn": "${{ env.lambda_function_arn }}",
-              "lambda_function_version": "${{ env.lambda_function_version }}"
+              "function_name": "${{ env.lambda_function_name }}",
+              "function_arn": "${{ env.lambda_function_arn }}"
             }
           clientId: ${{ secrets.PORT_CLIENT_ID }}
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
