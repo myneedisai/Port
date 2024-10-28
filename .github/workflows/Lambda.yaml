@@ -48,7 +48,7 @@ jobs:
         with:
           aws-access-key-id: '${{ secrets.TF_USER_AWS_KEY }}'
           aws-secret-access-key: '${{ secrets.TF_USER_AWS_SECRET }}'
-          aws-region: '${{ github.event.inputs.lambda_region }}'  # Modify if you have a region input
+          aws-region: '${{ secrets.TF_USER_AWS_REGION }}'
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -63,7 +63,7 @@ jobs:
           TF_VAR_lambda_runtime: "${{ github.event.inputs.lambda_runtime }}"
           TF_VAR_aws_region: "${{ secrets.TF_USER_AWS_REGION }}"
         run: |
-          cd lambda  # Adjust if your Terraform files are in a different directory
+          cd lambda 
           terraform init
           terraform validate
           terraform plan 
