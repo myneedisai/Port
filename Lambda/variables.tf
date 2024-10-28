@@ -1,23 +1,19 @@
-variable "aws_region" {
-  type = string
-}
-
 variable "lambda_name" {
-  type = string
-}
-
-variable "lambda_runtime" {
-  type = string
+  description = "The name of the Lambda function."
+  type        = string
 }
 
 variable "lambda_handler" {
-  type = string
+  description = "The function entrypoint in your code."
+  type        = string
 }
 
-variable "s3_bucket" {
-  type = string
+variable "lambda_runtime" {
+  description = "The runtime environment for the Lambda function (e.g., python3.8)."
+  type        = string
 }
 
-variable "s3_key" {
-  type = string
+variable "aws_region" {
+  description = "The AWS region to deploy the resources."
+  type        = string
 }
