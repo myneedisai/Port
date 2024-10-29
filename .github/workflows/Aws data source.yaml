@@ -18,4 +18,4 @@ jobs:
                   port_base_url: "https://api.getport.io"
                   config: |
                       aws_access_key_id: ${{ secrets.TF_USER_AWS_KEY }}
-                      aws_secret_access_key: ${{ secrets.awsSecretAccessKey }}
+                      aws_secret_access_key: ${{ secrets.TF_USER_AWS_SECRET }}
